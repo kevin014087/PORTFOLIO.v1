@@ -1,0 +1,159 @@
+.about {
+  padding: 2rem 0;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
+  gap: 2rem;
+  align-items: center;
+}
+
+.content p {
+  margin: 0;
+  max-width: 52rem;
+  color: var(--ink-soft);
+  align-self: center;
+}
+
+.skillsOrbitWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  position: relative;
+  overflow: visible;
+  min-width: 0;
+}
+
+.skillsOrbit {
+  position: relative;
+  width: min(100%, 390px);
+  min-height: clamp(340px, 44vw, 390px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  transform: scale(0.95);
+}
+
+.orbitTrack {
+  position: absolute;
+  inset: -10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.36);
+  animation: orbitalSpin 48s linear infinite;
+}
+
+.orbitTrack::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 999px;
+  border: 1px dashed var(--line);
+}
+
+.orbitCore {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--paper);
+  border: 1px solid var(--paper);
+  box-shadow: 0 0 0 10px rgba(255,255,255,0.06), 0 22px 56px rgba(0,0,0,0.25);
+  z-index: 2;
+}
+
+.orbitCore span {
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.orbitCore small {
+  margin-top: 0.2rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  font-size: 0.7rem;
+}
+
+.orbitItem {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin: -24px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 20px rgba(10, 10, 10, 0.12);
+  font-size: 1.28rem;
+  transform: rotate(calc(var(--i) * 40deg)) translateX(132px) rotate(calc(var(--i) * -40deg));
+}
+
+.orbitItem em {
+  margin-top: 0.22rem;
+  font-size: 0.55rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+.orbitItem svg {
+  width: 24px;
+  height: 24px;
+  color: var(--icon-color, var(--accent));
+}
+
+@keyframes orbitalSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 850px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+
+  .content p {
+    max-width: 100%;
+  }
+
+  .skillsOrbitWrap {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .skillsOrbit {
+    min-height: 280px;
+    width: min(100%, 330px);
+  }
+
+  .orbitTrack {
+    inset: -2px;
+  }
+
+  .orbitItem {
+    transform: rotate(calc(var(--i) * 40deg)) translateX(112px) rotate(calc(var(--i) * -40deg));
+  }
+
+  .orbitCore {
+    width: 116px;
+    height: 116px;
+  }
+}
+

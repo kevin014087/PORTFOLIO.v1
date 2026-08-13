@@ -1,0 +1,30 @@
+.ring,
+.dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.ring {
+  width: 44px;
+  height: 44px;
+  margin-left: -22px;
+  margin-top: -22px;
+  border: 1px solid rgba(34, 197, 94, 0.8);
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.08);
+  mix-blend-mode: normal;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+}

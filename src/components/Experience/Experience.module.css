@@ -1,0 +1,42 @@
+.experience {
+  padding: 2rem 0;
+}
+
+.summary {
+  margin: 0 0 1.5rem;
+  color: var(--ink-soft);
+}
+
+.timeline {
+  display: grid;
+  gap: 1rem;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 1rem;
+  padding: 1.4rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+}
+
+.period {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.entry h3 {
+  margin: 0 0 0.35rem;
+}
+
+.entry p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 620px) {
+  .entry {
+    grid-template-columns: 1fr;
+  }
+}

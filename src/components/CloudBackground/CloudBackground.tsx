@@ -1,24 +1,31 @@
-import { motion } from 'framer-motion';
+import { useEffect, useRef } from 'react';
 import styles from './CloudBackground.module.css';
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 
-const blobs = [
-  { className: styles.blob1, duration: 70, delay: 0 },
-  { className: styles.blob2, duration: 82, delay: -12 },
-  { className: styles.blob3, duration: 95, delay: -22 },
-  { className: styles.blob4, duration: 55, delay: -8 },
-  { className: styles.blob5, duration: 78, delay: -18 },
-];
+const BLOB_IDS = [1, 2, 3, 4, 5] as const;
 
 export function CloudBackground() {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    const onVisibilityChange = () => {
+      wrapper.classList.toggle(styles.paused, document.hidden);
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, []);
+
+  if (prefersReducedMotion) return null;
+
   return (
-    <div className={styles.wrapper} aria-hidden="true">
-      {blobs.map((blob) => (
-        <motion.div
-          key={blob.className}
-          className={blob.className}
-          animate={{ x: [0, 60, 0], y: [0, -40, 0], scale: [1, 1.08, 1] }}
-          transition={{ duration: blob.duration, repeat: Infinity, ease: 'easeInOut', repeatType: 'mirror', delay: blob.delay }}
-        />
+    <div className={styles.wrapper} ref={wrapperRef} aria-hidden="true">
+      {BLOB_IDS.map((id) => (
+        <div key={id} className={styles[`blob${id}`]} />
       ))}
     </div>
   );

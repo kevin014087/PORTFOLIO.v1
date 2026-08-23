@@ -1,4 +1,4 @@
-import { projects, pricing } from '../src/data/content';
+import { projects, pricing, contentEn } from '../src/data/content';
 import type { ChatAction, ChatResponse } from './types';
 
 export const VALID_ACTIONS: ChatAction[] = [
@@ -16,10 +16,10 @@ export const VALID_ACTIONS: ChatAction[] = [
   null,
 ];
 
-export const VALID_FILTERS = ['all', 'web', 'mobile', 'React', 'Flutter', 'Supabase', 'Python'] as const;
-export type ValidFilter = (typeof VALID_FILTERS)[number];
+const VALID_FILTERS = ['all', 'web', 'mobile', 'React', 'Flutter', 'Supabase', 'Python'] as const;
+type ValidFilter = (typeof VALID_FILTERS)[number];
 
-export const VALID_ICONS = ['cv', 'whatsapp', 'projects', 'contact', 'web', 'mobile', 'email'] as const;
+const VALID_ICONS = ['cv', 'whatsapp', 'projects', 'contact', 'web', 'mobile', 'email'] as const;
 
 export const MAX_MESSAGE_LENGTH = 2000;
 
@@ -107,33 +107,39 @@ function toCard(project: (typeof projects)[number], action: string) {
   };
 }
 
-export function getFallbackResponse(userText: string): ChatResponse {
+export function getFallbackResponse(userText: string, lang: 'fr' | 'en' = 'fr'): ChatResponse {
   const text = userText.toLowerCase();
+  const isEn = lang === 'en';
+  const data = isEn ? contentEn : { projects, pricing };
+  const sourceProjects = data.projects;
+  const sourcePricing = data.pricing;
 
   if (text.includes('mobile') || text.includes('flutter') || text.includes('android') || text.includes('ios')) {
     return {
-      message:
-        "Kevin est un développeur mobile expert sur **Flutter & Dart**. Il crée des apps fluides (60 FPS) avec gestion du mode hors-ligne (SQLite) et synchronisation temps réel (Supabase).\n\nJ'ai automatiquement filtré les projets mobiles ci-dessous !",
+      message: isEn
+        ? "Kevin is an expert mobile developer on **Flutter & Dart**. He builds smooth apps (60 FPS) with offline support (SQLite) and real-time synchronization (Supabase).\n\nI have filtered the mobile projects below for you!"
+        : "Kevin est un développeur mobile expert sur **Flutter & Dart**. Il crée des apps fluides (60 FPS) avec gestion du mode hors-ligne (SQLite) et synchronisation temps réel (Supabase).\n\nJ'ai automatiquement filtré les projets mobiles ci-dessous !",
       action: 'FILTER_PROJECTS_MOBILE',
       filter: 'mobile',
-      cards: projects.filter((p) => p.category === 'mobile').map((p) => toCard(p, 'FILTER_PROJECTS_MOBILE')),
+      cards: sourceProjects.filter((p) => p.category === 'mobile').map((p) => toCard(p, 'FILTER_PROJECTS_MOBILE')),
       quickActions: [
-        { label: '📱 Découvrir les projets mobile', action: 'FILTER_PROJECTS_MOBILE', filter: 'mobile', icon: 'mobile' },
-        { label: '💬 Contacter sur WhatsApp', action: 'OPEN_WHATSAPP', url: 'https://wa.me/2250140448289', icon: 'whatsapp' },
+        { label: isEn ? '📱 Discover mobile projects' : '📱 Découvrir les projets mobile', action: 'FILTER_PROJECTS_MOBILE', filter: 'mobile', icon: 'mobile' },
+        { label: '💬 WhatsApp', action: 'OPEN_WHATSAPP', url: 'https://wa.me/2250140448289', icon: 'whatsapp' },
       ],
     };
   }
 
   if (text.includes('web') || text.includes('react') || text.includes('next') || text.includes('site')) {
     return {
-      message:
-        "En développement Web, Kevin conçoit des applications modernes ultra-rapides avec **React, Next.js, TypeScript** et des backends **Python/Node.js**.\n\nJ'ai filtré les projets Web du portfolio pour vous !",
+      message: isEn
+        ? "In web development, Kevin builds modern ultra-fast applications with **React, Next.js, TypeScript** and **Python/Node.js** backends.\n\nI have filtered the portfolio's web projects for you!"
+        : "En développement Web, Kevin conçoit des applications modernes ultra-rapides avec **React, Next.js, TypeScript** et des backends **Python/Node.js**.\n\nJ'ai filtré les projets Web du portfolio pour vous !",
       action: 'FILTER_PROJECTS_WEB',
       filter: 'web',
-      cards: projects.filter((p) => p.category === 'web').map((p) => toCard(p, 'FILTER_PROJECTS_WEB')),
+      cards: sourceProjects.filter((p) => p.category === 'web').map((p) => toCard(p, 'FILTER_PROJECTS_WEB')),
       quickActions: [
-        { label: '🌐 Projets Web & SaaS', action: 'FILTER_PROJECTS_WEB', filter: 'web', icon: 'web' },
-        { label: '📄 Télécharger le CV', action: 'DOWNLOAD_CV', icon: 'cv' },
+        { label: isEn ? '🌐 Web & SaaS projects' : '🌐 Projets Web & SaaS', action: 'FILTER_PROJECTS_WEB', filter: 'web', icon: 'web' },
+        { label: isEn ? '📄 Download the CV' : '📄 Télécharger le CV', action: 'DOWNLOAD_CV', icon: 'cv' },
       ],
     };
   }
@@ -141,84 +147,85 @@ export function getFallbackResponse(userText: string): ChatResponse {
   if (
     text.includes('tarif') ||
     text.includes('prix') ||
+    text.includes('price') ||
     text.includes('combien') ||
     text.includes('coût') ||
     text.includes('cout') ||
+    text.includes('cost') ||
     text.includes('budget') ||
-    text.includes('estimation')
+    text.includes('estimation') ||
+    text.includes('estimate')
   ) {
-    const priceLines = pricing.platforms
-      .map((p) => `• **${p.label}** : dès ${p.min.toLocaleString('fr-FR')} ${pricing.currency}`)
+    const priceLines = sourcePricing.platforms
+      .map((p) => `• **${p.label}** : from ${p.min.toLocaleString('fr-FR')} ${sourcePricing.currency}`)
       .join('\n');
 
     return {
-      message: `Voici une grille indicative des tarifs de Kevin en ${pricing.currency} :\n\n${priceLines}`,
+      message: isEn
+        ? `Here is Kevin's indicative pricing grid in ${sourcePricing.currency}:\n\n${priceLines}`
+        : `Voici une grille indicative des tarifs de Kevin en ${sourcePricing.currency} :\n\n${priceLines}`,
       action: 'NAVIGATE_CONTACT',
       cards: [
         {
-          title: 'Demander un Devis Personnalisé',
-          description: 'Formulaire de contact avec réponse sous 24h.',
-          tag: 'Devis',
-          badges: ['Direct', 'Devis gratuit'],
+          title: isEn ? 'Request a Custom Quote' : 'Demander un Devis Personnalisé',
+          description: isEn ? 'Contact form with a reply within 24h.' : 'Formulaire de contact avec réponse sous 24h.',
+          tag: isEn ? 'Quote' : 'Devis',
+          badges: isEn ? ['Direct', 'Free quote'] : ['Direct', 'Devis gratuit'],
           link: '#contact',
           action: 'NAVIGATE_CONTACT',
         },
       ],
       quickActions: [
-        { label: '📬 Remplir le formulaire', action: 'NAVIGATE_CONTACT', icon: 'contact' },
+        { label: isEn ? '📬 Fill the form' : '📬 Remplir le formulaire', action: 'NAVIGATE_CONTACT', icon: 'contact' },
         { label: '💬 WhatsApp Direct', action: 'OPEN_WHATSAPP', url: 'https://wa.me/2250140448289', icon: 'whatsapp' },
       ],
     };
   }
 
-  if (text.includes('cv') || text.includes('curriculum') || text.includes('résumé') || text.includes('télécharger')) {
+  if (text.includes('cv') || text.includes('curriculum') || text.includes('résumé') || text.includes('resume') || text.includes('télécharger') || text.includes('download')) {
     return {
-      message: "J'ai ouvert le CV interactif de Kevin. Vous pouvez le consulter et le télécharger directement !",
+      message: isEn
+        ? "I opened Kevin's interactive CV. You can view it and download it directly!"
+        : "J'ai ouvert le CV interactif de Kevin. Vous pouvez le consulter et le télécharger directement !",
       action: 'DOWNLOAD_CV',
       cards: [
         {
           title: 'CV - BASSOLE Eric Kevin',
-          description: 'Développeur Lead Fullstack & Mobile (4+ ans d\'expérience)',
+          description: isEn ? 'Lead Fullstack & Mobile Developer (4+ years experience)' : "Développeur Lead Fullstack & Mobile (4+ ans d'expérience)",
           tag: 'CV',
           badges: ['React', 'Flutter', 'Python', 'Supabase'],
           action: 'DOWNLOAD_CV',
         },
       ],
       quickActions: [
-        { label: '📄 Télécharger le CV', action: 'DOWNLOAD_CV', icon: 'cv' },
-        { label: '💬 Écrire sur WhatsApp', action: 'OPEN_WHATSAPP', url: 'https://wa.me/2250140448289', icon: 'whatsapp' },
+        { label: isEn ? '📄 Download the CV' : '📄 Télécharger le CV', action: 'DOWNLOAD_CV', icon: 'cv' },
+        { label: '💬 WhatsApp', action: 'OPEN_WHATSAPP', url: 'https://wa.me/2250140448289', icon: 'whatsapp' },
       ],
     };
   }
 
   return {
-    message:
-      "Bonjour ! Je m'appelle Éric, l'assistant de Kevin. Je peux vous faire découvrir ses projets Web & Mobile, filtrer les technologies, vous montrer son CV ou vous mettre directement en relation !",
+    message: isEn
+      ? "Hello! I'm Éric, Kevin's assistant. I can show you his Web & Mobile projects, filter by technology, display his CV or put you directly in touch!"
+      : "Bonjour ! Je m'appelle Éric, l'assistant de Kevin. Je peux vous faire découvrir ses projets Web & Mobile, filtrer les technologies, vous montrer son CV ou vous mettre directement en relation !",
     action: null,
     cards: [
       {
-        title: 'Découvrir les réalisations',
-        description: 'Projets React, Next.js et Flutter',
-        tag: 'Portfolio',
+        title: isEn ? 'Discover the work' : 'Découvrir les réalisations',
+        description: isEn ? 'React, Next.js and Flutter projects' : 'Projets React, Next.js et Flutter',
+        tag: isEn ? 'Portfolio' : 'Portfolio',
         badges: ['React', 'Flutter', 'Supabase'],
         action: 'NAVIGATE_PROJECTS',
         filter: 'all',
       },
     ],
     quickActions: [
-      { label: '📱 Apps Mobile', action: 'FILTER_PROJECTS_MOBILE', filter: 'mobile', icon: 'mobile' },
-      { label: '🌐 Projets Web', action: 'FILTER_PROJECTS_WEB', filter: 'web', icon: 'web' },
-      { label: '📄 Obtenir le CV', action: 'DOWNLOAD_CV', icon: 'cv' },
+      { label: isEn ? '📱 Mobile Apps' : '📱 Apps Mobile', action: 'FILTER_PROJECTS_MOBILE', filter: 'mobile', icon: 'mobile' },
+      { label: isEn ? '🌐 Web Projects' : '🌐 Projets Web', action: 'FILTER_PROJECTS_WEB', filter: 'web', icon: 'web' },
+      { label: isEn ? '📄 Get the CV' : '📄 Obtenir le CV', action: 'DOWNLOAD_CV', icon: 'cv' },
       { label: '💬 WhatsApp', action: 'OPEN_WHATSAPP', url: 'https://wa.me/2250140448289', icon: 'whatsapp' },
     ],
   };
-}
-
-export function sanitizeChatMessage(message: string): string | null {
-  const trimmed = message.trim();
-  if (!trimmed) return null;
-  if (trimmed.length > MAX_MESSAGE_LENGTH) return null;
-  return trimmed;
 }
 
 export function sanitizeHistory(history: unknown): Array<{ role: 'user' | 'assistant'; content: string }> {

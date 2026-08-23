@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import {
   FaHtml5,
   FaCss3Alt,
@@ -10,7 +9,8 @@ import { SiNextdotjs, SiFlutter, SiSupabase, SiJavascript } from 'react-icons/si
 import { IconType } from 'react-icons';
 import { SectionTitle } from '../SectionTitle/SectionTitle';
 import styles from './About.module.css';
-import { skills } from '../../data/content';
+import { useI18n } from '../../i18n';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 const skillIconMap: Record<string, IconType> = {
   HTML: FaHtml5,
@@ -37,25 +37,20 @@ const skillColorMap: Record<string, string> = {
 };
 
 export function About() {
+  const { t, content } = useI18n();
+  const skills = content.skills;
+  const ref = useScrollReveal<HTMLDivElement>();
+
   return (
-    <motion.section
-      className={styles.about}
-      id="about"
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-    >
-      <SectionTitle title="À propos" subtitle="Présentation" />
+    <section ref={ref} className={styles.about} id="about">
+      <SectionTitle title={t.about.title} subtitle={t.about.subtitle} />
       <div className={styles.content}>
-        <p>
-          Développeur fullstack passionné, je conçois des applications web et mobiles de bout en bout : interfaces soignées côté client, logique métier solide côté serveur, et données bien structurées. J'aime transformer un besoin flou en produit utilisable, rapide et fiable.
-        </p>
+        <p>{t.about.text}</p>
         <div className={styles.skillsOrbitWrap}>
-          <div className={styles.skillsOrbit} aria-label="Technologies maîtrisées">
+          <div className={styles.skillsOrbit} aria-label={t.about.orbitAria}>
             <div className={styles.orbitCore}>
-              <span>Stack</span>
-              <small>Dev</small>
+              <span>{t.about.stack}</span>
+              <small>{t.about.dev}</small>
             </div>
             <div className={styles.orbitTrack}>
               {skills.map((skill, index) => {
@@ -76,6 +71,6 @@ export function About() {
           </div>
         </div>
       </div>
-    </motion.section>
+    </section>
   );
 }

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiCalendar, FiBookOpen } from 'react-icons/fi';
 import styles from './NoteModal.module.css';
 import type { Note } from '../../data/content';
+import { renderMarkdown } from '../../lib/markdown';
+import { useI18n } from '../../i18n';
 
 interface NoteModalProps {
   note: Note | null;
@@ -10,6 +12,8 @@ interface NoteModalProps {
 }
 
 export function NoteModal({ note, onClose }: NoteModalProps) {
+  const { t } = useI18n();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -19,6 +23,26 @@ export function NoteModal({ note, onClose }: NoteModalProps) {
     }
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [note, onClose]);
+
+  useEffect(() => {
+    if (!note) return;
+
+    const previousTitle = document.title;
+    document.title = `${note.title} — KevCompilePas`;
+
+    const metaDescription = document.querySelector('meta[name="description"]');
+    const previousDescription = metaDescription?.getAttribute('content') ?? '';
+    if (metaDescription) {
+      metaDescription.setAttribute('content', note.excerpt);
+    }
+
+    return () => {
+      document.title = previousTitle;
+      if (metaDescription) {
+        metaDescription.setAttribute('content', previousDescription);
+      }
+    };
+  }, [note]);
 
   if (!note) return null;
 
@@ -39,13 +63,13 @@ export function NoteModal({ note, onClose }: NoteModalProps) {
           <div className={styles.header}>
             <div className={styles.headerMeta}>
               <span className={styles.badge}>
-                <FiBookOpen /> Article / Note
+                <FiBookOpen /> {t.noteModal.badge}
               </span>
               <span className={styles.date}>
                 <FiCalendar /> {note.date}
               </span>
             </div>
-            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Fermer l'article">
+            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label={t.noteModal.closeAria}>
               <FiX />
             </button>
           </div>
@@ -57,12 +81,7 @@ export function NoteModal({ note, onClose }: NoteModalProps) {
           <div className={styles.body}>
             {note.content ? (
               <div className={styles.articleContent}>
-                {note.content.split('\n\n').map((paragraph, idx) => {
-                  if (paragraph.startsWith('### ')) {
-                    return <h3 key={idx}>{paragraph.replace('### ', '')}</h3>;
-                  }
-                  return <p key={idx}>{paragraph}</p>;
-                })}
+                {renderMarkdown(note.content)}
               </div>
             ) : (
               <p>{note.excerpt}</p>

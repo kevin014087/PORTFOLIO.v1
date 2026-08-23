@@ -1,9 +1,9 @@
-import { FormEvent, lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { FormEvent, lazy, memo, Suspense, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSend, FiUser, FiX, FiExternalLink, FiDownload, FiMessageCircle, FiFilter, FiMail } from 'react-icons/fi';
 import type { ChatCard, ChatActionButton, ChatMessage } from '../../types/chat';
 import { executeChatAction, sendChatMessage } from '../../lib/chatApi';
-import { chatAssistant } from '../../data/content';
+import { useI18n } from '../../i18n';
 import styles from './Chatbox.module.css';
 
 const RobotMascot3D = lazy(() =>
@@ -14,34 +14,69 @@ interface ChatboxProps {
   onOpenCv?: () => void;
 }
 
-const quickQuestions = [
-  '🚀 Tarifs & budgets ?',
-  '📱 Apps mobiles Flutter ?',
-  '🌐 Projets Web & React ?',
-  '📄 Obtenir le CV',
-  '📬 Me contacter',
-];
+interface ChatInputBarProps {
+  placeholder: string;
+  ariaLabel: string;
+  disabled: boolean;
+  onSend: (text: string) => void;
+}
 
-const welcomeMessage: ChatMessage = {
-  id: 'welcome',
-  sender: 'bot',
-  text: chatAssistant.welcome,
-  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-  quickActions: [
-    { label: '📱 Apps Mobile', action: 'FILTER_PROJECTS_MOBILE', filter: 'mobile', icon: 'mobile' },
-    { label: '🌐 Projets Web', action: 'FILTER_PROJECTS_WEB', filter: 'web', icon: 'web' },
-    { label: '📄 Obtenir le CV', action: 'DOWNLOAD_CV', icon: 'cv' },
-    { label: '💬 WhatsApp', action: 'OPEN_WHATSAPP', url: 'https://wa.me/2250140448289', icon: 'whatsapp' },
-  ],
-};
+// Barre de saisie isolée : la frappe ne re-rend que ce sous-composant
+const ChatInputBar = memo(function ChatInputBar({ placeholder, ariaLabel, disabled, onSend }: ChatInputBarProps) {
+  const [value, setValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus auto à l'ouverture (jamais de blocage : l'input reste toujours actif)
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const text = value.trim();
+    if (!text || disabled) return;
+    setValue('');
+    onSend(text);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className={styles.inputBar}>
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+      />
+      <button type="submit" className={styles.sendBtn} disabled={!value.trim() || disabled}>
+        <FiSend />
+      </button>
+    </form>
+  );
+});
 
 export function Chatbox({ onOpenCv }: ChatboxProps) {
+  const { t, content, lang } = useI18n();
+  const chatAssistant = content.chatAssistant;
+  const quickQuestions = t.chat.quickQuestions;
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
-  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMessages([
+      {
+        id: 'welcome',
+        sender: 'bot',
+        text: chatAssistant.welcome,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        quickActions: t.chat.quickActions as ChatActionButton[],
+      },
+    ]);
+  }, [chatAssistant.welcome, t.chat.quickActions]);
 
   useEffect(() => {
     if (isOpen) {
@@ -49,8 +84,7 @@ export function Chatbox({ onOpenCv }: ChatboxProps) {
     }
   }, [messages, isLoading, isOpen]);
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const messageText = (textToSend ?? input).trim();
+  const handleSendMessage = async (messageText: string) => {
     if (!messageText || isLoading) return;
 
     const userMsg: ChatMessage = {
@@ -61,12 +95,11 @@ export function Chatbox({ onOpenCv }: ChatboxProps) {
     };
 
     setMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setInput('');
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await sendChatMessage(messageText, [...messages, userMsg]);
+      const response = await sendChatMessage(messageText, [...messages, userMsg], lang);
 
       const botMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
@@ -85,7 +118,7 @@ export function Chatbox({ onOpenCv }: ChatboxProps) {
       const message =
         err instanceof Error
           ? err.message
-          : "Impossible d'obtenir une réponse pour le moment.";
+          : t.chat.errorFallback;
       setError(message);
     } finally {
       setIsLoading(false);
@@ -115,11 +148,6 @@ export function Chatbox({ onOpenCv }: ChatboxProps) {
       default:
         return <FiFilter />;
     }
-  };
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    void handleSendMessage();
   };
 
   return (
@@ -154,7 +182,7 @@ export function Chatbox({ onOpenCv }: ChatboxProps) {
                 type="button"
                 className={styles.closeChatBtn}
                 onClick={() => setIsOpen(false)}
-                aria-label="Fermer le chatbot"
+                aria-label={t.chat.closeAria}
               >
                 <FiX />
               </button>
@@ -185,7 +213,7 @@ export function Chatbox({ onOpenCv }: ChatboxProps) {
                 >
                   <div className={styles.msgAvatar}>
                     {msg.sender === 'bot' ? (
-                      <img src="/img/logo.png" alt="" className={styles.botLogoAvatar} />
+                      <img src="/img/logo.webp" alt="" className={styles.botLogoAvatar} loading="lazy" decoding="async" />
                     ) : (
                       <FiUser />
                     )}
@@ -208,7 +236,7 @@ export function Chatbox({ onOpenCv }: ChatboxProps) {
                             {card.tag && <span className={styles.cardTag}>{card.tag}</span>}
                             <strong>{card.title}</strong>
                             {card.description && <p>{card.description}</p>}
-                            
+
                             {card.badges && card.badges.length > 0 && (
                               <div className={styles.cardBadges}>
                                 {card.badges.map((badge, i) => (
@@ -220,7 +248,7 @@ export function Chatbox({ onOpenCv }: ChatboxProps) {
                             )}
 
                             <span className={styles.cardLink}>
-                              Découvrir <FiExternalLink />
+                              {t.chat.discover} <FiExternalLink />
                             </span>
                           </button>
                         ))}
@@ -249,7 +277,7 @@ export function Chatbox({ onOpenCv }: ChatboxProps) {
               {isLoading && (
                 <div className={`${styles.messageWrapper} ${styles.botMsgWrapper}`}>
                   <div className={styles.msgAvatar}>
-                    <img src="/img/logo.png" alt="" className={styles.botLogoAvatar} />
+                    <img src="/img/logo.webp" alt="" className={styles.botLogoAvatar} loading="lazy" decoding="async" />
                   </div>
                   <div className={styles.typingIndicator}>
                     <span /><span /><span />
@@ -266,45 +294,34 @@ export function Chatbox({ onOpenCv }: ChatboxProps) {
               <div ref={messagesEndRef} />
             </div>
 
-            <form onSubmit={handleSubmit} className={styles.inputBar}>
-              <input
-                type="text"
-                placeholder="Posez une question ou demandez un projet..."
-                aria-label="Votre message à l'assistant"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                disabled={isLoading}
-              />
-              <button type="submit" className={styles.sendBtn} disabled={!input.trim() || isLoading}>
-                <FiSend />
-              </button>
-            </form>
+            <ChatInputBar
+              placeholder={t.chat.inputPlaceholder}
+              ariaLabel={t.chat.inputAria}
+              disabled={isLoading}
+              onSend={handleSendMessage}
+            />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <motion.button
-        type="button"
-        className={styles.floatingToggleBtn}
-        onClick={() => setIsOpen((prev) => !prev)}
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.92 }}
-        aria-label={isOpen ? 'Fermer le chat' : `Ouvrir le chat avec ${chatAssistant.name}`}
-      >
-        <div className={styles.floatingIconWrapper}>
-          {isOpen ? (
-            <FiX />
-          ) : (
-            <Suspense fallback={<img src="/img/logo.png" alt="" style={{ width: 38, height: 38 }} />}>
+      {!isOpen && (
+        <motion.button
+          type="button"
+          className={styles.floatingToggleBtn}
+          onClick={() => setIsOpen((prev) => !prev)}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          aria-label={`Open chat with ${chatAssistant.name}`}
+        >
+          <div className={styles.floatingIconWrapper}>
+            <Suspense fallback={<img src="/img/logo.webp" alt="" style={{ width: 38, height: 38 }} loading="lazy" decoding="async" />}>
               <RobotMascot3D state="idle" width={38} height={38} interactive={false} />
             </Suspense>
-          )}
-          <span className={styles.onlinePulse} />
-        </div>
-        <span className={styles.toggleBtnText}>
-          {isOpen ? chatAssistant.toggleClose : chatAssistant.toggleOpen}
-        </span>
-      </motion.button>
+            <span className={styles.onlinePulse} />
+          </div>
+          <span className={styles.toggleBtnText}>{chatAssistant.toggleOpen}</span>
+        </motion.button>
+      )}
     </div>
   );
 }

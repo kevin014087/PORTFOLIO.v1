@@ -12,7 +12,7 @@ export type ChatAction =
   | 'NAVIGATE_TESTIMONIALS'
   | null;
 
-export interface ChatCard {
+interface ChatCard {
   id?: string;
   title: string;
   description?: string;
@@ -24,7 +24,7 @@ export interface ChatCard {
   projectId?: string;
 }
 
-export interface ChatActionButton {
+interface ChatActionButton {
   label: string;
   action: ChatAction;
   url?: string;
@@ -38,10 +38,5 @@ export interface ChatResponse {
   filter?: 'all' | 'web' | 'mobile' | 'React' | 'Flutter' | 'Supabase' | 'Python';
   cards: ChatCard[];
   quickActions?: ChatActionButton[];
-}
-
-export interface ChatRequestBody {
-  message: string;
-  history?: Array<{ role: 'user' | 'assistant'; content: string }>;
 }
 

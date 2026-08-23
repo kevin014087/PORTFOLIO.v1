@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, type JSX } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiSun, FiMoon, FiFileText, FiMail, FiLayers, FiUser, FiBriefcase, FiZap, FiX, FiCheck } from 'react-icons/fi';
+import { FiSearch, FiSun, FiMoon, FiFileText, FiMail, FiLayers, FiUser, FiBriefcase, FiZap, FiX, FiCheck, FiCalendar } from 'react-icons/fi';
 import styles from './CommandPalette.module.css';
-import { navLinks } from '../../data/content';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useI18n, tpl } from '../../i18n';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -22,6 +22,8 @@ interface CommandItem {
 }
 
 export function CommandPalette({ isOpen, onClose, onToggleTheme, onOpenCv, theme }: CommandPaletteProps) {
+  const { t, content } = useI18n();
+  const navLinks = content.navLinks;
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -54,11 +56,25 @@ export function CommandPalette({ isOpen, onClose, onToggleTheme, onOpenCv, theme
     }, 1200);
   };
 
+  const openBooking = () => {
+    onClose();
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('portfolio-open-booking'));
+    }, 80);
+  };
+
+  const openConfigurator = () => {
+    onClose();
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('portfolio-autopilot', { detail: { action: 'OPEN_CONFIGURATOR' } }));
+    }, 80);
+  };
+
   const commands: CommandItem[] = [
     {
       id: 'cmd-cv',
-      label: 'Voir & Télécharger le CV',
-      category: 'Actions',
+      label: t.commandPalette.cmdCv,
+      category: t.commandPalette.categoryActions,
       icon: <FiFileText />,
       action: () => {
         onClose();
@@ -66,9 +82,23 @@ export function CommandPalette({ isOpen, onClose, onToggleTheme, onOpenCv, theme
       },
     },
     {
+      id: 'cmd-booking',
+      label: t.commandPalette.cmdBooking,
+      category: t.commandPalette.categoryActions,
+      icon: <FiCalendar />,
+      action: openBooking,
+    },
+    {
+      id: 'cmd-configurator',
+      label: t.commandPalette.cmdConfigurator,
+      category: t.commandPalette.categoryActions,
+      icon: <FiZap />,
+      action: openConfigurator,
+    },
+    {
       id: 'cmd-theme',
-      label: theme === 'dark' ? 'Passer en Mode Clair' : 'Passer en Mode Sombre',
-      category: 'Actions',
+      label: theme === 'dark' ? t.commandPalette.cmdThemeLight : t.commandPalette.cmdThemeDark,
+      category: t.commandPalette.categoryActions,
       icon: theme === 'dark' ? <FiSun /> : <FiMoon />,
       action: () => {
         onToggleTheme();
@@ -77,15 +107,15 @@ export function CommandPalette({ isOpen, onClose, onToggleTheme, onOpenCv, theme
     },
     {
       id: 'cmd-email',
-      label: 'Copier l\'adresse email (bassolekevin022@gmail.com)',
-      category: 'Actions',
+      label: t.commandPalette.cmdEmail,
+      category: t.commandPalette.categoryActions,
       icon: copied ? <FiCheck style={{ color: '#22c55e' }} /> : <FiMail />,
       action: copyEmail,
     },
     ...navLinks.map((link) => ({
       id: `nav-${link.href}`,
-      label: `Aller à la section : ${link.label}`,
-      category: 'Navigation',
+      label: tpl(t.commandPalette.cmdNav, { label: link.label }),
+      category: t.commandPalette.categoryNavigation,
       icon: link.href === '#projects' ? <FiLayers /> : link.href === '#about' ? <FiUser /> : link.href === '#estimator' ? <FiZap /> : <FiBriefcase />,
       action: () => handleNavigate(link.href),
     })),
@@ -122,7 +152,7 @@ export function CommandPalette({ isOpen, onClose, onToggleTheme, onOpenCv, theme
             className={styles.dialog}
             role="dialog"
             aria-modal="true"
-            aria-label="Palette de commandes"
+            aria-label={t.commandPalette.aria}
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -136,15 +166,15 @@ export function CommandPalette({ isOpen, onClose, onToggleTheme, onOpenCv, theme
                 ref={inputRef}
                 type="text"
                 className={styles.input}
-                placeholder="Tapez une commande ou recherchez (ex: projects, cv, theme)..."
-                aria-label="Rechercher une commande"
+                placeholder={t.commandPalette.placeholder}
+                aria-label={t.commandPalette.searchAria}
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
                   setSelectedIndex(0);
                 }}
               />
-              <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Fermer">
+              <button type="button" className={styles.closeBtn} onClick={onClose} aria-label={t.commandPalette.closeAria}>
                 <FiX />
               </button>
             </div>
@@ -152,7 +182,7 @@ export function CommandPalette({ isOpen, onClose, onToggleTheme, onOpenCv, theme
             <div className={styles.resultsList}>
               {filteredCommands.length === 0 ? (
                 <div className={styles.noResults}>
-                  <span>Aucune commande trouvée pour "{query}"</span>
+                  <span>{tpl(t.commandPalette.noResults, { query })}</span>
                 </div>
               ) : (
                 filteredCommands.map((cmd, idx) => (
@@ -174,13 +204,13 @@ export function CommandPalette({ isOpen, onClose, onToggleTheme, onOpenCv, theme
             <div className={styles.footer}>
               <div className={styles.shortcutHint}>
                 <span className={styles.kbd}>↑</span>
-                <span className={styles.kbd}>↓</span> pour naviguer
+                <span className={styles.kbd}>↓</span> {t.commandPalette.navTo}
               </div>
               <div className={styles.shortcutHint}>
-                <span className={styles.kbd}>↵</span> pour exécuter
+                <span className={styles.kbd}>↵</span> {t.commandPalette.exec}
               </div>
               <div className={styles.shortcutHint}>
-                <span className={styles.kbd}>ESC</span> pour fermer
+                <span className={styles.kbd}>ESC</span> {t.commandPalette.close}
               </div>
             </div>
           </motion.div>

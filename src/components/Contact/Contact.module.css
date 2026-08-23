@@ -37,18 +37,31 @@
   gap: 1rem;
 }
 
-.buttons a {
+.buttons a,
+.buttons button.secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.4rem;
   padding: 0.9rem 1.1rem;
   border-radius: var(--radius-sm);
   font-weight: 600;
 }
 
-.buttons a:not(.secondary) {
+.buttons a:not(.secondary),
+.buttons button:not(.secondary) {
   background: var(--accent);
   color: var(--paper);
+}
+
+.buttons button.secondary {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.buttons button.secondary:hover {
+  border-color: var(--accent);
 }
 
 .secondary {

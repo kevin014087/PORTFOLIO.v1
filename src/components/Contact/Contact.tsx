@@ -1,9 +1,22 @@
 import { FormEvent, useState } from 'react';
-import { motion } from 'framer-motion';
+import { FiCalendar } from 'react-icons/fi';
 import { onSubmit } from '../../lib/contact';
 import styles from './Contact.module.css';
+import { useI18n } from '../../i18n';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
+
+function renderAccent(text: string) {
+  const parts = text.split(/(\*[^*]+\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <span key={i} className="accent-italic">{part.slice(1, -1)}</span>;
+    }
+    return part;
+  });
+}
 
 export function Contact() {
+  const { t } = useI18n();
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -24,60 +37,61 @@ export function Contact() {
       event.currentTarget.reset();
     } else {
       setStatus('error');
-      setErrorMessage(res.error || 'Erreur lors de l\'envoi.');
+      setErrorMessage(res.error || t.contact.errorFallback);
     }
   };
 
+  const handleOpenBooking = () => {
+    window.dispatchEvent(new CustomEvent('portfolio-open-booking'));
+  };
+
+  const ref = useScrollReveal<HTMLDivElement>();
+
   return (
-    <motion.section
-      className={styles.contact}
-      id="contact"
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-      aria-labelledby="contact-heading"
-    >
+    <section ref={ref} className={styles.contact} id="contact" aria-labelledby="contact-heading">
       <div className={styles.intro}>
-        <p className={styles.subtitle}>Contact</p>
-        <h2 id="contact-heading">Un projet en tête ?</h2>
+        <p className={styles.subtitle}>{t.contact.subtitle}</p>
+        <h2 id="contact-heading">{renderAccent(t.contact.heading)}</h2>
         <p className={styles.description}>
-          Ensemble, transformons votre idée en un produit clair, rapide et efficace. Écrivez-moi ou passez par le formulaire ci-dessous.
+          {t.contact.description}
         </p>
         <div className={styles.buttons}>
-          <a href="mailto:bassolekevin022@gmail.com" aria-label="Envoyer un email directement à Eric Kevin">
-            M'écrire par email ↗
+          <a href="mailto:bassolekevin022@gmail.com" aria-label={t.contact.emailAria}>
+            {t.contact.emailBtn}
           </a>
+          <button type="button" className={styles.secondary} onClick={handleOpenBooking} aria-label={t.contact.bookCallAria}>
+            <FiCalendar /> {t.contact.bookCall}
+          </button>
           <a
             href="https://github.com/kevcompilepas"
             className={styles.secondary}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Consulter le profil GitHub de KevCompilePas (s'ouvre dans un nouvel onglet)"
+            aria-label={t.contact.githubAria}
           >
-            Voir mon GitHub ↗
+            {t.contact.githubBtn}
           </a>
         </div>
       </div>
-      <form className={styles.form} onSubmit={handleSubmit} aria-label="Formulaire de contact">
+      <form className={styles.form} onSubmit={handleSubmit} aria-label={t.contact.formAria}>
         <label htmlFor="contact-name">
-          Nom
+          {t.contact.name}
           <input id="contact-name" name="name" type="text" required aria-required="true" />
         </label>
         <label htmlFor="contact-email">
-          Email
+          {t.contact.email}
           <input id="contact-email" name="email" type="email" required aria-required="true" />
         </label>
         <label htmlFor="contact-message">
-          Message
+          {t.contact.message}
           <textarea id="contact-message" name="message" rows={5} required aria-required="true" />
         </label>
         <button type="submit" disabled={status === 'sending'} aria-busy={status === 'sending'}>
-          {status === 'sending' ? 'Envoi en cours...' : 'Envoyer le message'}
+          {status === 'sending' ? t.contact.sending : t.contact.send}
         </button>
         <div aria-live="polite">
           {status === 'success' && (
-            <p className={styles.success}>Merci ! Votre message a bien été envoyé.</p>
+            <p className={styles.success}>{t.contact.success}</p>
           )}
           {status === 'error' && (
             <p style={{ color: '#ef4444', marginTop: '1rem', fontSize: '0.9rem' }}>
@@ -86,7 +100,6 @@ export function Contact() {
           )}
         </div>
       </form>
-    </motion.section>
+    </section>
   );
 }
-

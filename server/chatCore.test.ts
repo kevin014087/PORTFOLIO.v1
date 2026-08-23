@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   parseChatResponse,
   getFallbackResponse,
-  sanitizeChatMessage,
   sanitizeHistory,
   VALID_ACTIONS,
   MAX_MESSAGE_LENGTH,
@@ -75,17 +74,6 @@ describe('getFallbackResponse', () => {
     const res = getFallbackResponse('bonjour');
     expect(res.action).toBeNull();
     expect(res.message.length).toBeGreaterThan(0);
-  });
-});
-
-describe('sanitizeChatMessage', () => {
-  it('trims and returns valid messages', () => {
-    expect(sanitizeChatMessage('  Bonjour  ')).toBe('Bonjour');
-  });
-
-  it('rejects empty and oversized messages', () => {
-    expect(sanitizeChatMessage('   ')).toBeNull();
-    expect(sanitizeChatMessage('a'.repeat(MAX_MESSAGE_LENGTH + 1))).toBeNull();
   });
 });
 

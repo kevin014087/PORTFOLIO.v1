@@ -7,6 +7,7 @@ export type ChatAction =
   | 'NAVIGATE_CONTACT'
   | 'DOWNLOAD_CV'
   | 'OPEN_WHATSAPP'
+  | 'OPEN_CONFIGURATOR'
   | 'NAVIGATE_SERVICES'
   | 'NAVIGATE_EXPERIENCE'
   | 'NAVIGATE_TESTIMONIALS'
@@ -29,7 +30,7 @@ export interface ChatActionButton {
   action: ChatAction;
   url?: string;
   filter?: 'all' | 'web' | 'mobile' | 'React' | 'Flutter' | 'Supabase' | 'Python';
-  icon?: 'cv' | 'whatsapp' | 'projects' | 'contact' | 'web' | 'mobile' | 'email';
+  icon?: 'cv' | 'whatsapp' | 'projects' | 'contact' | 'web' | 'mobile' | 'email' | 'configurator';
 }
 
 export interface ChatResponse {

@@ -4,16 +4,10 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { z } from 'zod';
 import Groq from 'groq-sdk';
-import { SYSTEM_PROMPT } from './systemPrompt';
-import {
-  parseChatResponse,
-  getFallbackResponse,
-  sanitizeChatMessage,
-  sanitizeHistory,
-  MAX_MESSAGE_LENGTH,
-} from './chatCore';
-import type { ChatRequestBody } from './types';
+import { SYSTEM_PROMPT, SYSTEM_PROMPT_EN } from './systemPrompt';
+import { parseChatResponse, getFallbackResponse, sanitizeHistory, MAX_MESSAGE_LENGTH } from './chatCore';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3001;
@@ -21,6 +15,29 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 const app = express();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+const chatRequestBodySchema = z.object({
+  message: z
+    .string({ error: 'Le champ "message" est requis.' })
+    .trim()
+    .min(1, 'Le champ "message" ne peut pas être vide.')
+    .max(MAX_MESSAGE_LENGTH, `Le champ "message" doit faire au plus ${MAX_MESSAGE_LENGTH} caractères.`),
+  lang: z.enum(['fr', 'en'], { error: 'Le champ "lang" doit être "fr" ou "en".' }).default('fr'),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant'], { error: 'Rôle de message invalide.' }),
+        content: z
+          .string({ error: 'Contenu de message invalide.' })
+          .trim()
+          .min(1, 'Contenu de message vide.')
+          .max(MAX_MESSAGE_LENGTH, 'Contenu de message trop long.'),
+      }),
+      { error: 'Le champ "history" doit être un tableau de messages.' },
+    )
+    .max(20, 'Le champ "history" ne peut pas dépasser 20 messages.')
+    .default([]),
+});
 
 const chatLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -34,29 +51,29 @@ app.use(cors({ origin: isProduction ? false : true }));
 app.use(express.json({ limit: '32kb' }));
 
 app.post('/api/chat', chatLimiter, async (req, res) => {
-  const { message, history = [] } = req.body as ChatRequestBody;
+  const validation = chatRequestBodySchema.safeParse(req.body);
 
-  const sanitized = sanitizeChatMessage(message);
-  if (!sanitized) {
-    res.status(400).json({
-      error: `Le champ "message" est requis et doit faire au plus ${MAX_MESSAGE_LENGTH} caractères.`,
-    });
+  if (!validation.success) {
+    res.status(400).json({ error: validation.error.issues[0]?.message ?? 'Corps de requête invalide.' });
     return;
   }
 
+  const { message: sanitized, lang } = validation.data;
+  const safeHistory = sanitizeHistory(validation.data.history);
+
+  const systemPrompt = lang === 'en' ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT;
+
   if (!process.env.GROQ_API_KEY) {
-    console.warn('[POST /api/chat] GROQ_API_KEY non renseignée. Mode réponse de secours activé.');
-    res.json(getFallbackResponse(sanitized));
+    console.warn('[POST /api/chat] Service de réponse non configuré, bascule en mode secours.');
+    res.json(getFallbackResponse(sanitized, lang));
     return;
   }
 
   try {
-    const safeHistory = sanitizeHistory(history);
-
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt },
         ...safeHistory.map((item) => ({ role: item.role, content: item.content })),
         { role: 'user', content: sanitized },
       ],
@@ -74,7 +91,7 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
     res.json(payload);
   } catch (error) {
     console.error('[POST /api/chat] Erreur Groq, basculement vers le mode secours :', error);
-    res.json(getFallbackResponse(sanitized));
+    res.json(getFallbackResponse(sanitized, lang));
   }
 });
 

@@ -11,6 +11,22 @@
   border-radius: 50%;
   filter: blur(40px);
   opacity: 0.7;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+@keyframes blob-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(48px, -32px, 0) scale(1.08);
+  }
+}
+
+.wrapper.paused div {
+  animation-play-state: paused;
 }
 
 .blob1 {
@@ -19,6 +35,7 @@
   background: radial-gradient(circle, rgba(34, 197, 94, 0.28), transparent 70%);
   top: 8%;
   left: 8%;
+  animation: blob-drift 70s ease-in-out infinite;
 }
 
 .blob2 {
@@ -27,6 +44,8 @@
   background: radial-gradient(circle, rgba(59, 130, 246, 0.24), transparent 70%);
   top: 16%;
   right: 10%;
+  animation: blob-drift 82s ease-in-out infinite;
+  animation-delay: -12s;
 }
 
 .blob3 {
@@ -35,6 +54,8 @@
   background: radial-gradient(circle, rgba(124, 58, 237, 0.2), transparent 70%);
   bottom: 12%;
   left: 12%;
+  animation: blob-drift 95s ease-in-out infinite;
+  animation-delay: -22s;
 }
 
 .blob4 {
@@ -43,6 +64,8 @@
   background: radial-gradient(circle, rgba(248, 113, 113, 0.18), transparent 72%);
   top: 44%;
   right: 20%;
+  animation: blob-drift 55s ease-in-out infinite;
+  animation-delay: -8s;
 }
 
 .blob5 {
@@ -51,4 +74,13 @@
   background: radial-gradient(circle, rgba(14, 165, 233, 0.2), transparent 70%);
   bottom: 18%;
   right: 6%;
+  animation: blob-drift 78s ease-in-out infinite;
+  animation-delay: -18s;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .wrapper div {
+    animation: none;
+  }
+}
+

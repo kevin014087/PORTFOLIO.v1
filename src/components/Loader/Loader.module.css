@@ -7,224 +7,147 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1.5rem;
   font-family: var(--font-body, system-ui, sans-serif);
 }
 
-.loaderContent {
-  width: min(100%, 680px);
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
+.terminal {
+  width: min(100%, 620px);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
 }
 
-.loaderLogo {
-  width: 88px;
-  height: 88px;
-  object-fit: contain;
-  align-self: center;
-  border-radius: 1rem;
-  background: #ffffff;
-  padding: 0.35rem;
-  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.25);
-}
-
-.brandTitle {
+/* ── Top bar ── */
+.terminalBar {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
-  text-align: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.brandName {
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.barTitle {
+  margin-left: auto;
+  margin-right: auto;
   font-family: var(--font-display, 'Space Grotesk', sans-serif);
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #ffffff 30%, #818cf8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.brandTag {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: #9ca3af;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  user-select: none;
 }
 
-/* Track Container */
-.trackContainer {
-  position: relative;
-  width: 100%;
-  height: 64px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  overflow: visible;
+/* ── Body ── */
+.terminalBody {
+  padding: 2rem 2rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 180px;
+}
+
+/* ── Lines ── */
+.terminalLine {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: #9ca3af;
   display: flex;
   align-items: center;
-  padding: 0 1rem;
+  gap: 0.6rem;
 }
 
-/* Progress Fill Bar */
-.progressBar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-  border-radius: 999px;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
-  transition: width 0.08s ease-out;
+.terminalLine.done {
+  color: #d1d5db;
 }
 
-/* Runner Wrapper */
-.runnerWrapper {
-  position: absolute;
-  top: -42px;
-  transform: translateX(-50%);
-  z-index: 10;
-  transition: left 0.08s ease-out;
-  pointer-events: none;
+.check {
+  color: #22c55e;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
-.runnerCharacter {
-  width: 52px;
-  height: 52px;
-  color: #6366f1;
-  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.8));
-  animation: bounceSprint 0.25s infinite alternate ease-in-out;
+/* ── Cursor ── */
+.cursor {
+  display: inline-block;
+  color: #818cf8;
+  font-size: 0.9rem;
+  animation: blink 1s step-end infinite;
 }
 
-.runnerSvg {
-  width: 100%;
-  height: 100%;
-  color: #ffffff;
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
-/* Sprint Leg & Arm Keyframe Animations */
-.legLeft {
-  transform-origin: 44px 58px;
-  animation: runLegLeft 0.22s infinite linear;
-}
-
-.legRight {
-  transform-origin: 44px 58px;
-  animation: runLegRight 0.22s infinite linear;
-}
-
-.armLeft {
-  transform-origin: 52px 36px;
-  animation: runArmLeft 0.22s infinite linear;
-}
-
-.armRight {
-  transform-origin: 52px 36px;
-  animation: runArmRight 0.22s infinite linear;
-}
-
-@keyframes bounceSprint {
-  0% { transform: translateY(0) rotate(-3deg); }
-  100% { transform: translateY(-6px) rotate(3deg); }
-}
-
-@keyframes runLegLeft {
-  0% { transform: rotate(0deg); }
-  50% { transform: rotate(-45deg); }
-  100% { transform: rotate(0deg); }
-}
-
-@keyframes runLegRight {
-  0% { transform: rotate(0deg); }
-  50% { transform: rotate(45deg); }
-  100% { transform: rotate(0deg); }
-}
-
-@keyframes runArmLeft {
-  0% { transform: rotate(0deg); }
-  50% { transform: rotate(40deg); }
-  100% { transform: rotate(0deg); }
-}
-
-@keyframes runArmRight {
-  0% { transform: rotate(0deg); }
-  50% { transform: rotate(-40deg); }
-  100% { transform: rotate(0deg); }
-}
-
-/* Finish Line */
-.finishLine {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.75rem;
+/* ── Progress bar ── */
+.progressWrap {
+  margin: 0 2rem;
+  height: 4px;
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
-  color: #ffffff;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  transition: all 0.3s ease;
+  overflow: hidden;
 }
 
-.flagIcon {
-  font-size: 1.1rem;
-  color: #f59e0b;
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  border-radius: 999px;
+  transition: width 0.1s ease-out;
 }
 
-.finishReached {
-  background: #22c55e;
-  border-color: #22c55e;
-  box-shadow: 0 0 25px #22c55e;
-  animation: pulseFinish 0.4s ease infinite alternate;
-}
-
-@keyframes pulseFinish {
-  0% { transform: translateY(-50%) scale(1); }
-  100% { transform: translateY(-50%) scale(1.1); }
-}
-
-/* Loader Footer */
-.loaderFooter {
+/* ── Footer ── */
+.footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.95rem;
-  font-weight: 600;
+  padding: 1rem 2rem 1.5rem;
 }
 
 .statusText {
-  color: #a1a1aa;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #9ca3af;
 }
 
 .percentText {
-  font-family: var(--font-display, sans-serif);
-  font-size: 1.4rem;
-  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #818cf8;
 }
 
+/* ── Mobile ── */
 @media (max-width: 550px) {
-  .trackContainer {
-    height: 52px;
+  .terminalBody {
+    padding: 1.5rem 1.25rem 1rem;
+    min-height: 150px;
   }
-  .finishText {
-    display: none;
+
+  .terminalLine {
+    font-size: 0.82rem;
   }
-  .runnerWrapper {
-    top: -36px;
+
+  .progressWrap {
+    margin: 0 1.25rem;
   }
-  .runnerCharacter {
-    width: 44px;
-    height: 44px;
+
+  .footer {
+    padding: 0.875rem 1.25rem 1.25rem;
+  }
+
+  .percentText {
+    font-size: 1.05rem;
   }
 }

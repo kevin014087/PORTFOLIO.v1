@@ -1,25 +1,32 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { services } from '../../data/content';
 import styles from './Services.module.css';
 import { useState } from 'react';
+import { useI18n } from '../../i18n';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
+
+function renderAccent(text: string) {
+  const parts = text.split(/(\*[^*]+\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <span key={i} className="accent-italic">{part.slice(1, -1)}</span>;
+    }
+    return part;
+  });
+}
 
 const easing = [0.22, 0.61, 0.36, 1];
 
 export function ServicesAccordion() {
+  const { t, content } = useI18n();
+  const services = content.services;
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const ref = useScrollReveal<HTMLDivElement>();
 
   return (
-    <motion.section
-      className={styles.services}
-      id="services"
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.7, ease: easing }}
-    >
+    <section ref={ref} className={styles.services} id="services">
       <div className={styles.header}>
-        <p className={styles.subtitle}>Services</p>
-        <h2 className={styles.title}>Ce que je propose</h2>
+        <p className={styles.subtitle}>{t.services.subtitle}</p>
+        <h2 className={styles.title}>{renderAccent(t.services.title)}</h2>
       </div>
       <div className={styles.list}>
         {services.map((service, index) => {
@@ -52,6 +59,15 @@ export function ServicesAccordion() {
           );
         })}
       </div>
-    </motion.section>
+      <div className={styles.ctaWrap}>
+        <button
+          type="button"
+          className={styles.ctaBtn}
+          onClick={() => window.dispatchEvent(new CustomEvent('portfolio-autopilot', { detail: { action: 'OPEN_CONFIGURATOR' } }))}
+        >
+          ⚡ {t.commandPalette.cmdConfigurator}
+        </button>
+      </div>
+    </section>
   );
 }

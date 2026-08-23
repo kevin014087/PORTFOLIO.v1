@@ -1,147 +1,117 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaFlagCheckered } from 'react-icons/fa6';
 import styles from './Loader.module.css';
+import { useI18n } from '../../i18n';
 
 interface LoaderProps {
   onComplete?: () => void;
 }
 
+const THRESHOLDS = [25, 55, 85, 100] as const;
+
 export function Loader({ onComplete }: LoaderProps) {
+  const { t } = useI18n();
   const [progress, setProgress] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const reducedMotion = useRef(
+    typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+
+  const lines = [t.loader.line1, t.loader.line2, t.loader.line3, t.loader.line4];
+  const visibleLines = THRESHOLDS.filter((th) => progress >= th).length;
+  const allDone = visibleLines === 4;
+
+  // Typewriter display: each visible line shows progressively more characters
+  const displayedText = lines.map((text, i) => {
+    if (i >= visibleLines) return '';
+    if (i < visibleLines - 1 || allDone) return text;
+    // Current line: reveal characters based on progress within the threshold range
+    const prevThreshold = i === 0 ? 0 : THRESHOLDS[i - 1];
+    const range = THRESHOLDS[i] - prevThreshold;
+    const localProgress = (progress - prevThreshold) / range;
+    const chars = Math.ceil(localProgress * text.length);
+    return text.slice(0, chars);
+  });
 
   useEffect(() => {
-    const STORAGE_KEY = 'loader-seen-v1';
-    if (sessionStorage.getItem(STORAGE_KEY)) {
-      setIsFinished(true);
-      onComplete?.();
+    if (reducedMotion.current) {
+      setProgress(100);
+      setTimeout(() => {
+        setIsFinished(true);
+        onComplete?.();
+      }, 100);
       return;
     }
 
-    // 20ms * 100 steps = 2000ms = 2.0s total duration
+    // 30ms * 100 steps = 3000ms total
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          sessionStorage.setItem(STORAGE_KEY, '1');
           setTimeout(() => {
             setIsFinished(true);
             onComplete?.();
-          }, 300);
+          }, 400);
           return 100;
         }
         return prev + 1;
       });
-    }, 20);
+    }, 30);
 
     return () => clearInterval(interval);
   }, [onComplete]);
-
-  const getStatusText = (prog: number) => {
-    if (prog < 30) return 'Initialisation de la stack...';
-    if (prog < 65) return 'Chargement des projets React & Flutter...';
-    if (prog < 90) return 'Connexion à Supabase & IA...';
-    return 'Ligne d’arrivée atteinte ! 🚀';
-  };
 
   return (
     <AnimatePresence>
       {!isFinished && (
         <motion.div
           className={styles.loaderOverlay}
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.05 }}
-          transition={{ duration: 0.4, ease: [0.22, 0.61, 0.36, 1] }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: [0.22, 0.61, 0.36, 1] }}
         >
-            <div className={styles.loaderContent}>
-            <img src="/img/logo.png" alt="Logo KevCompilePas" className={styles.loaderLogo} />
-            {/* Header */}
-            <div className={styles.brandTitle}>
-              <span className={styles.brandName}>KevCompilePas</span>
+          <div className={styles.terminal}>
+            {/* Top bar */}
+            <div className={styles.terminalBar}>
+              <span className={styles.dot} style={{ background: '#ff5f57' }} />
+              <span className={styles.dot} style={{ background: '#febc2e' }} />
+              <span className={styles.dot} style={{ background: '#28c840' }} />
+              <span className={styles.barTitle}>kevcompilepas portfolio</span>
             </div>
 
-            {/* Race Track Container */}
-            <div className={styles.trackContainer}>
-              {/* Progress Line */}
-              <div
-                className={styles.progressBar}
-                style={{ width: `${progress}%` }}
-              />
-
-              {/* Running Character (Bonhomme orienté vers la droite) */}
-              <div
-                className={styles.runnerWrapper}
-                style={{ left: `${Math.min(progress, 92)}%` }}
-              >
-                <div className={styles.runnerCharacter}>
-                  {/* SVG Animated Running Figure Leaning Right */}
-                  <svg
-                    viewBox="0 0 100 100"
-                    className={styles.runnerSvg}
-                    aria-label="Bonhomme courant vers la droite"
+            {/* Terminal body */}
+            <div className={styles.terminalBody}>
+              {lines.map((line, i) => {
+                const isVisible = i < visibleLines;
+                const isCurrent = i === visibleLines - 1 && !allDone;
+                return (
+                  <motion.div
+                    key={i}
+                    className={`${styles.terminalLine} ${isVisible ? styles.done : ''}`}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: isVisible ? 1 : 0, x: isVisible ? 0 : -8 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
                   >
-                    {/* Head leaning forward right */}
-                    <circle cx="58" cy="20" r="11" fill="currentColor" />
-                    {/* Torso leaning right */}
-                    <path
-                      d="M56 30 L44 58"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                    />
-                    {/* Arms (Running motion forward right) */}
-                    <path
-                      className={styles.armRight}
-                      d="M52 36 L75 42 L88 32"
-                      stroke="currentColor"
-                      strokeWidth="6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                    <path
-                      className={styles.armLeft}
-                      d="M52 36 L32 46 L20 38"
-                      stroke="currentColor"
-                      strokeWidth="6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                    {/* Legs (Sprinting motion forward right) */}
-                    <path
-                      className={styles.legRight}
-                      d="M44 58 L68 72 L85 86"
-                      stroke="currentColor"
-                      strokeWidth="7"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                    <path
-                      className={styles.legLeft}
-                      d="M44 58 L25 72 L12 65"
-                      stroke="currentColor"
-                      strokeWidth="7"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Finish Line (Ligne d'arrivée) */}
-              <div className={`${styles.finishLine} ${progress >= 100 ? styles.finishReached : ''}`}>
-                <FaFlagCheckered className={styles.flagIcon} />
-                <span className={styles.finishText}>ARRIVÉE</span>
-              </div>
+                    <span>{displayedText[i]}</span>
+                    {isCurrent && <span className={styles.cursor}>█</span>}
+                    {isVisible && <span className={styles.check}>{t.loader.ready}</span>}
+                  </motion.div>
+                );
+              })}
             </div>
 
-            {/* Footer Stats & Text */}
-            <div className={styles.loaderFooter}>
-              <span className={styles.statusText}>{getStatusText(progress)}</span>
+            {/* Progress bar */}
+            <div className={styles.progressWrap}>
+              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+            </div>
+
+            {/* Footer */}
+            <div className={styles.footer}>
+              <span className={styles.statusText}>
+                {allDone ? t.loader.line4 : lines[Math.min(visibleLines, 3)]}
+              </span>
               <span className={styles.percentText}>{progress}%</span>
             </div>
           </div>

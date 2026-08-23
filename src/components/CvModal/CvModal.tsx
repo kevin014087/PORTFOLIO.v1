@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiDownload, FiMail, FiPhone, FiCheckCircle, FiBriefcase, FiAward, FiCode, FiPrinter } from 'react-icons/fi';
 
 import styles from './CvModal.module.css';
-import { cvData } from '../../data/content';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useI18n } from '../../i18n';
 
 interface CvModalProps {
   isOpen: boolean;
@@ -12,6 +12,8 @@ interface CvModalProps {
 }
 
 export function CvModal({ isOpen, onClose }: CvModalProps) {
+  const { t, content } = useI18n();
+  const cvData = content.cvData;
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useFocusTrap(isOpen, dialogRef);
@@ -45,29 +47,29 @@ export function CvModal({ isOpen, onClose }: CvModalProps) {
             <div className={styles.header}>
               <div className={styles.headerTitle}>
                 <FiAward className={styles.headerIcon} />
-                <h2 id="cv-modal-title">Curriculum Vitae</h2>
+                <h2 id="cv-modal-title">{t.cv.title}</h2>
               </div>
               <div className={styles.headerActions}>
                 <a
                   href="/CV_Bassole_Kevin.pdf"
                   download="CV_Bassole_Kevin.pdf"
                   className={styles.downloadBtn}
-                  aria-label="Télécharger le CV au format PDF"
+                  aria-label={t.cv.downloadAria}
                 >
                   <FiDownload />
-                  <span>Télécharger PDF</span>
+                  <span>{t.cv.download}</span>
                 </a>
                 <button
                   type="button"
                   className={styles.downloadBtn}
                   onClick={() => window.print()}
-                  aria-label="Imprimer le CV"
+                  aria-label={t.cv.printAria}
                   style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <FiPrinter />
-                  <span>Imprimer</span>
+                  <span>{t.cv.print}</span>
                 </button>
-                <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Fermer la modale CV">
+                <button type="button" className={styles.closeBtn} onClick={onClose} aria-label={t.cv.closeAria}>
                   <FiX />
                 </button>
               </div>
@@ -88,7 +90,7 @@ export function CvModal({ isOpen, onClose }: CvModalProps) {
 
               {/* Skills Grid */}
               <div className={styles.section}>
-                <h3><FiCode /> Compétences Clés</h3>
+                <h3><FiCode /> {t.cv.skills}</h3>
                 <div className={styles.skillsTags}>
                   {cvData.skills.map((skill) => (
                     <span key={skill} className={styles.skillTag}>
@@ -100,7 +102,7 @@ export function CvModal({ isOpen, onClose }: CvModalProps) {
 
               {/* Experience Timeline */}
               <div className={styles.section}>
-                <h3><FiBriefcase /> Expériences Professionnelles</h3>
+                <h3><FiBriefcase /> {t.cv.experiences}</h3>
                 <div className={styles.experiencesList}>
                   {cvData.experiences.map((exp, i) => (
                     <div key={i} className={styles.expCard}>
@@ -117,7 +119,7 @@ export function CvModal({ isOpen, onClose }: CvModalProps) {
 
               {/* Education */}
               <div className={styles.section}>
-                <h3>🎓 Formation</h3>
+                <h3>🎓 {t.cv.education}</h3>
                 <p className={styles.education}>{cvData.education}</p>
               </div>
             </div>

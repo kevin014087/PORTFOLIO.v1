@@ -1,11 +1,5 @@
 import { supabase } from './supabase';
 
-export interface ContactFormData {
-  name: string;
-  email: string;
-  message: string;
-}
-
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;

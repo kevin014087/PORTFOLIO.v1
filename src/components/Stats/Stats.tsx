@@ -1,17 +1,14 @@
-import { motion } from 'framer-motion';
 import styles from './Stats.module.css';
-import { stats } from '../../data/content';
+import { useI18n } from '../../i18n';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 export function Stats() {
+  const { content } = useI18n();
+  const stats = content.stats;
+  const ref = useScrollReveal<HTMLDivElement>();
+
   return (
-    <motion.section
-      className={styles.stats}
-      id="stats"
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-    >
+    <section ref={ref} className={styles.stats} id="stats">
       <div className={styles.grid}>
         {stats.map((stat) => (
           <div key={stat.label} className={styles.card}>
@@ -20,6 +17,6 @@ export function Stats() {
           </div>
         ))}
       </div>
-    </motion.section>
+    </section>
   );
 }
